@@ -1,7 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
-
+using System.Threading.Tasks;
 
 class Program
 {
@@ -15,6 +15,7 @@ class Program
         "Easily manage data at any scale with robust access controls, flexible replication tools, and organization-wide visibility.",
         "Run big data analytics, artificial intelligence (AI), machine learning (ML), and high performance computing (HPC) applications.",
         "Meet Recovery Time Objectives (RTO), Recovery Point Objectives (RPO), and compliance requirements with S3’s robust replication features."
+        
         };
 
         var listener = new HttpListener();
@@ -37,7 +38,11 @@ class Program
                 Console.WriteLine(i);
                 Console.WriteLine(s3_facts[i]);
 
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes( DateTime.Now.TimeOfDay + " - " + s3_facts[i] );
+                HttpResponseMessage response = await client.GetAsync("https://api.ipify.org");
+                response.EnsureSuccessStatusCode();
+                string publicIp = await response.Content.ReadAsStringAsync();
+
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes( DateTime.Now.TimeOfDay + " - " + s3_facts[i] + " - " + publicIp);
                 response.ContentLength64 = buffer.Length;
                 response.OutputStream.Write(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
