@@ -8,9 +8,9 @@ class Program
     public static async Task Main(string[] args)
     {
         Console.WriteLine("HttpListener started...");
-        
-        // Fetch and print the public IP address with a message
-        await PrintPublicIpWithMessage();
+
+        // Fetch the public IP address
+        string publicIp = await GetPublicIp();
 
         String[] s3_facts = new String[] {
             "Scale storage resources to meet fluctuating needs with 99.999999999% (11 9s) of data durability.",
@@ -36,12 +36,16 @@ class Program
                 response.StatusDescription = "Status OK";
 
                 Random rnd = new Random();
-                int i = rnd.Next(0, s3_facts.Length - 1);
+                int i = rnd.Next(0, s3_facts.Length);
 
                 Console.WriteLine(i);
                 Console.WriteLine(s3_facts[i]);
 
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(DateTime.Now.TimeOfDay + " - " + s3_facts[i]);
+                // Include the public IP in the response
+                string responseMessage = $"Public IP: {publicIp}\n" +
+                                         $"{DateTime.Now.TimeOfDay} - {s3_facts[i]}";
+
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseMessage);
                 response.ContentLength64 = buffer.Length;
                 response.OutputStream.Write(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
@@ -57,7 +61,7 @@ class Program
         }
     }
 
-    private static async Task PrintPublicIpWithMessage()
+    private static async Task<string> GetPublicIp()
     {
         try
         {
@@ -67,12 +71,13 @@ class Program
                 response.EnsureSuccessStatusCode();
                 
                 string publicIp = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Your public IP address is: {publicIp}");
+                return publicIp;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error retrieving public IP: {ex.Message}");
+            return "Unavailable";
         }
     }
 }
